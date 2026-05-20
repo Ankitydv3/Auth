@@ -26,6 +26,9 @@ app.get('/', (req, res) => {
 });
 
 // Database connection
+if (!process.env.MONGO_URI) {
+    console.log("MONGO_URI missing");
+}
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
     console.log('MongoDB Connected');
