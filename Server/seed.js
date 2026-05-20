@@ -24,110 +24,110 @@ const users = [
 // 🎉 Events (fixed with all required fields)
 const events = [
   {
-    title: "Sunburn Music Festival",
-    description: "India's biggest EDM and DJ night experience.",
+    title: "Neon Glow Party",
+    description: "Dance under neon lights with DJs and unlimited fun.",
     date: new Date(),
     location: "Goa",
     totalSeats: 500,
     availableSeats: 500,
     ticketPrice: 2500,
-    category: "Music",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a"
   },
 
   {
-    title: "Comedy Night Live",
-    description: "Stand-up comedy show with top comedians.",
+    title: "Weekend Club Night",
+    description: "Live DJ performance with energetic dance vibes.",
     date: new Date(),
     location: "Delhi",
     totalSeats: 120,
     availableSeats: 120,
     ticketPrice: 799,
-    category: "Comedy",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1527224538127-2104bb71c51b"
   },
 
   {
-    title: "Gaming Championship",
-    description: "Compete in BGMI, Valorant and FIFA tournaments.",
+    title: "Gaming After Party",
+    description: "Celebrate with gaming lovers, music and fun challenges.",
     date: new Date(),
     location: "Gurgaon",
     totalSeats: 200,
     availableSeats: 200,
     ticketPrice: 999,
-    category: "Gaming",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e"
   },
 
   {
-    title: "Food Carnival",
-    description: "Taste delicious street food and desserts.",
+    title: "Food & Music Night",
+    description: "Party with delicious food, live music and dance.",
     date: new Date(),
     location: "Noida",
     totalSeats: 300,
     availableSeats: 300,
     ticketPrice: 199,
-    category: "Food",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836"
   },
 
   {
-    title: "Bollywood Dance Party",
-    description: "Dance all night with Bollywood DJs and lights.",
+    title: "Bollywood Night Bash",
+    description: "Dance all night with Bollywood hits and DJs.",
     date: new Date(),
     location: "Mumbai",
     totalSeats: 400,
     availableSeats: 400,
     ticketPrice: 1499,
-    category: "Dance",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4"
   },
 
   {
-    title: "Tech Startup Expo",
-    description: "Meet startup founders and investors.",
+    title: "Rooftop Party Fest",
+    description: "Enjoy city skyline views with live DJs and drinks.",
     date: new Date(),
     location: "Bangalore",
     totalSeats: 250,
     availableSeats: 250,
     ticketPrice: 1200,
-    category: "Technology",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c"
   },
 
   {
-    title: "Adventure Trek Camp",
-    description: "Mountain trekking and camping experience.",
+    title: "Mountain Camp Party",
+    description: "Bonfire, music and camping under the stars.",
     date: new Date(),
     location: "Manali",
     totalSeats: 60,
     availableSeats: 60,
     ticketPrice: 3500,
-    category: "Adventure",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
   },
 
   {
-    title: "Luxury Car Show",
-    description: "Explore supercars and sports cars exhibition.",
+    title: "Supercar Party Show",
+    description: "Luxury cars, music and nightlife experience.",
     date: new Date(),
     location: "Chandigarh",
     totalSeats: 150,
     availableSeats: 150,
     ticketPrice: 600,
-    category: "Automobile",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7"
   },
 
   {
-    title: "Fashion Week",
-    description: "Designer fashion showcase and celebrity appearance.",
+    title: "Celebrity Fashion Party",
+    description: "Fashion show mixed with music and celebrity appearances.",
     date: new Date(),
     location: "Jaipur",
     totalSeats: 180,
     availableSeats: 180,
     ticketPrice: 2200,
-    category: "Fashion",
+    category: "Party",
     imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b"
   },
 
