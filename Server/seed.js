@@ -1,27 +1,39 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const bcrypt = require("bcryptjs");
 
-const User = require('./Models/User');
-const Event = require('./Models/Event');
-const Booking = require('./Models/Booking');
+const User = require("./Models/User");
+const Event = require("./Models/Event");
+const Booking = require("./Models/Booking");
 
 dotenv.config();
 
-// 👤 Users
+// Users
 const users = [
-  { name: 'Ankit Yadav', email: 'ankit@test.com', password: "password123", role: 'admin', isVerified: true },
-  { name: 'Rahul Sharma', email: 'rahul@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Priya Singh', email: 'priya@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Aman Verma', email: 'aman@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Neha Gupta', email: 'neha@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Rohit Kumar', email: 'rohit@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Sneha Patel', email: 'sneha@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Vikas Yadav', email: 'vikas@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Pooja Mehta', email: 'pooja@test.com', password: "password123", role: 'user', isVerified: true },
-  { name: 'Karan Malhotra', email: 'karan@test.com', password: "password123", role: 'user', isVerified: true }
+  {
+    name: "Ankit Yadav",
+    email: "Ankitydvpvt@gmail.com",
+    password: "123456",
+    role: "admin",
+    isVerified: true,
+  },
+  {
+    name: "Rahul Sharma",
+    email: "rahul@test.com",
+    password: "123456",
+    role: "user",
+    isVerified: true,
+  },
+  {
+    name: "Priya Singh",
+    email: "priya@test.com",
+    password: "123456",
+    role: "user",
+    isVerified: true,
+  },
 ];
 
-// 🎉 Events (fixed with all required fields)
+// Events
 const events = [
   {
     title: "Neon Glow Party",
@@ -144,39 +156,48 @@ const events = [
   }
 ];
 
-// 🌱 Seed Function
 const seedData = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB connected");
 
-    // clear old data
+    console.log("MongoDB Connected");
+
+    // Clear old data
     await User.deleteMany();
     await Event.deleteMany();
     await Booking.deleteMany();
 
-    // insert users
-    const createdUsers = await User.insertMany(users);
+    // Hash passwords
+    const usersWithHashedPasswords = await Promise.all(
+      users.map(async (user) => ({
+        ...user,
+        password: await bcrypt.hash(user.password, 10),
+      }))
+    );
 
-    // assign admin as creator
+    // Insert users
+    const createdUsers = await User.insertMany(
+      usersWithHashedPasswords
+    );
+
     const adminId = createdUsers[0]._id;
 
-    const updatedEvents = events.map(event => ({
+    // Assign admin as creator
+    const updatedEvents = events.map((event) => ({
       ...event,
-      createdBy: adminId
+      createdBy: adminId,
     }));
 
-    // insert events
+    // Insert events
     await Event.insertMany(updatedEvents);
 
-    console.log("✅ Users & Events seeded successfully");
 
     process.exit();
+
   } catch (error) {
     console.error("❌ Error:", error);
     process.exit(1);
   }
 };
 
-// run seed
 seedData();
