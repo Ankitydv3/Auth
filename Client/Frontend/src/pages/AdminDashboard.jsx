@@ -120,10 +120,18 @@ const AdminDashboard = () => {
   const confirmBooking = async (id) => {
     if (!window.confirm("Confirm this booking?")) return;
 
+    setError("");
     try {
-      await api.put(`/booking/${id}/confirm`, { paymentStatus: "completed" });
+      const { data } = await api.put(`/booking/${id}/confirm`, {
+        paymentStatus: "completed",
+      });
       setSuccess("Booking confirmed successfully");
-      fetchDashboard();
+      // Update booking in state with full backend response
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === id && data.booking ? { ...b, ...data.booking } : b,
+        ),
+      );
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       console.error(err);

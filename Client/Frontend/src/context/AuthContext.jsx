@@ -29,9 +29,7 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
       });
-      setUser(data);
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("token", data.token);
+      // Do NOT set user or token here; only after OTP verification
       return data;
     } catch (error) {
       console.error("Registration failed", error);
