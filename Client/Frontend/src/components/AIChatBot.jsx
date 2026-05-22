@@ -63,7 +63,8 @@ export default function AIChatBot() {
         {
           id: Date.now() + 1,
           sender: "bot",
-          text: response.data.data.response || "Could you provide more details?",
+          text:
+            response.data.data.response || "Could you provide more details?",
           timestamp: new Date(),
         },
       ]);
@@ -125,10 +126,19 @@ export default function AIChatBot() {
           transition: "all 0.3s",
           transform: open ? "rotate(90deg)" : "none",
         }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
-        onMouseLeave={(e) => e.currentTarget.style.transform = open ? "rotate(90deg)" : "none"}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.transform = open ? "rotate(90deg)" : "none")
+        }
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
           {open ? (
             <FaTimes style={{ color: "white", fontSize: "28px" }} />
           ) : (
@@ -139,46 +149,70 @@ export default function AIChatBot() {
 
       {/* Chat Window */}
       {open && (
-        <div style={{
-          position: "fixed",
-          bottom: "120px",
-          right: "30px",
-          width: "420px",
-          height: "650px",
-          background: "white",
-          borderRadius: "24px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          zIndex: 9999,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}>
-          {/* Header */}
-          <div style={{
-            padding: "20px 24px",
+        <div
+          style={{
+            position: "fixed",
+            bottom: "120px",
+            right: "30px",
+            width: "420px",
+            height: "650px",
             background: "white",
-            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+            borderRadius: "24px",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            zIndex: 9999,
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}>
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              padding: "20px 24px",
+              background: "white",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #667eea, #764ba2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #667eea, #764ba2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <FaBrain style={{ color: "white", fontSize: "24px" }} />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>Eventora AI</h3>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                  <span style={{ width: "8px", height: "8px", background: "#48bb78", borderRadius: "50%" }}></span>
-                  <span style={{ fontSize: "12px", color: "#718096" }}>Online</span>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>
+                  Eventora AI
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    marginTop: "2px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      background: "#48bb78",
+                      borderRadius: "50%",
+                    }}
+                  ></span>
+                  <span style={{ fontSize: "12px", color: "#718096" }}>
+                    Online
+                  </span>
                 </div>
               </div>
             </div>
@@ -198,51 +232,73 @@ export default function AIChatBot() {
           </div>
 
           {/* Messages Body */}
-          <div style={{
-            flex: 1,
-            padding: "20px",
-            overflowY: "auto",
-            background: "#fafbfc",
-          }}>
+          <div
+            style={{
+              flex: 1,
+              padding: "20px",
+              overflowY: "auto",
+              background: "#fafbfc",
+            }}
+          >
             {messages.map((msg) => (
-              <div key={msg.id} style={{
-                display: "flex",
-                gap: "12px",
-                marginBottom: "20px",
-                flexDirection: msg.sender === "user" ? "row-reverse" : "row",
-              }}>
+              <div
+                key={msg.id}
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  marginBottom: "20px",
+                  flexDirection: msg.sender === "user" ? "row-reverse" : "row",
+                }}
+              >
                 <div style={{ flexShrink: 0 }}>
-                  <div style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "50%",
-                    background: msg.sender === "bot" ? "linear-gradient(135deg, #667eea, #764ba2)" : "#e2e8f0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: msg.sender === "bot" ? "white" : "#4a5568",
-                  }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background:
+                        msg.sender === "bot"
+                          ? "linear-gradient(135deg, #667eea, #764ba2)"
+                          : "#e2e8f0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: msg.sender === "bot" ? "white" : "#4a5568",
+                    }}
+                  >
                     {msg.sender === "bot" ? <FaRobot /> : <FaUserCircle />}
                   </div>
                 </div>
                 <div style={{ flex: 1, maxWidth: "calc(100% - 48px)" }}>
-                  <div style={{
-                    padding: "12px 16px",
-                    borderRadius: "18px",
-                    background: msg.sender === "bot" ? "white" : "linear-gradient(135deg, #667eea, #764ba2)",
-                    border: msg.sender === "bot" ? "1px solid #e2e8f0" : "none",
-                    color: msg.sender === "user" ? "white" : "inherit",
-                    borderBottomLeftRadius: msg.sender === "bot" ? "4px" : "18px",
-                    borderBottomRightRadius: msg.sender === "user" ? "4px" : "18px",
-                  }}>
-                    <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.5 }}>{msg.text}</p>
+                  <div
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "18px",
+                      background:
+                        msg.sender === "bot"
+                          ? "white"
+                          : "linear-gradient(135deg, #667eea, #764ba2)",
+                      border:
+                        msg.sender === "bot" ? "1px solid #e2e8f0" : "none",
+                      color: msg.sender === "user" ? "white" : "inherit",
+                      borderBottomLeftRadius:
+                        msg.sender === "bot" ? "4px" : "18px",
+                      borderBottomRightRadius:
+                        msg.sender === "user" ? "4px" : "18px",
+                    }}
+                  >
+                    <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.5 }}>
+                      {msg.text}
+                    </p>
                   </div>
-                  <div style={{
-                    fontSize: "10px",
-                    color: "#a0aec0",
-                    marginTop: "4px",
-                    textAlign: msg.sender === "user" ? "right" : "left",
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      color: "#a0aec0",
+                      marginTop: "4px",
+                      textAlign: msg.sender === "user" ? "right" : "left",
+                    }}
+                  >
                     {formatTime(msg.timestamp)}
                   </div>
                 </div>
@@ -250,33 +306,63 @@ export default function AIChatBot() {
             ))}
 
             {isTyping && (
-              <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+              <div
+                style={{ display: "flex", gap: "12px", marginBottom: "20px" }}
+              >
                 <div>
-                  <div style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #667eea, #764ba2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                  }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #667eea, #764ba2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                    }}
+                  >
                     <FaRobot />
                   </div>
                 </div>
                 <div>
-                  <div style={{
-                    padding: "16px 20px",
-                    background: "white",
-                    borderRadius: "18px",
-                    borderBottomLeftRadius: "4px",
-                    border: "1px solid #e2e8f0",
-                  }}>
+                  <div
+                    style={{
+                      padding: "16px 20px",
+                      background: "white",
+                      borderRadius: "18px",
+                      borderBottomLeftRadius: "4px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
                     <div style={{ display: "flex", gap: "6px" }}>
-                      <span style={{ width: "8px", height: "8px", background: "#cbd5e0", borderRadius: "50%", animation: "typing 1.4s infinite" }}></span>
-                      <span style={{ width: "8px", height: "8px", background: "#cbd5e0", borderRadius: "50%", animation: "typing 1.4s infinite 0.2s" }}></span>
-                      <span style={{ width: "8px", height: "8px", background: "#cbd5e0", borderRadius: "50%", animation: "typing 1.4s infinite 0.4s" }}></span>
+                      <span
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          background: "#cbd5e0",
+                          borderRadius: "50%",
+                          animation: "typing 1.4s infinite",
+                        }}
+                      ></span>
+                      <span
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          background: "#cbd5e0",
+                          borderRadius: "50%",
+                          animation: "typing 1.4s infinite 0.2s",
+                        }}
+                      ></span>
+                      <span
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          background: "#cbd5e0",
+                          borderRadius: "50%",
+                          animation: "typing 1.4s infinite 0.4s",
+                        }}
+                      ></span>
                     </div>
                   </div>
                 </div>
@@ -287,8 +373,23 @@ export default function AIChatBot() {
 
           {/* Suggestions */}
           {messages.length === 1 && (
-            <div style={{ padding: "16px 20px", borderTop: "1px solid #e2e8f0", background: "white" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", fontSize: "12px", fontWeight: 600 }}>
+            <div
+              style={{
+                padding: "16px 20px",
+                borderTop: "1px solid #e2e8f0",
+                background: "white",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                }}
+              >
                 <BsStars style={{ color: "#fbbf24" }} />
                 <span>Suggested Questions</span>
               </div>
@@ -321,15 +422,23 @@ export default function AIChatBot() {
           )}
 
           {/* Input Footer */}
-          <div style={{ padding: "16px 20px", background: "white", borderTop: "1px solid #e2e8f0" }}>
-            <div style={{
-              display: "flex",
-              gap: "12px",
-              background: "#f7fafc",
-              borderRadius: "24px",
-              padding: "8px 12px",
-              border: "1px solid #e2e8f0",
-            }}>
+          <div
+            style={{
+              padding: "16px 20px",
+              background: "white",
+              borderTop: "1px solid #e2e8f0",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                background: "#f7fafc",
+                borderRadius: "24px",
+                padding: "8px 12px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
               <textarea
                 ref={inputRef}
                 value={message}
@@ -364,18 +473,24 @@ export default function AIChatBot() {
                   justifyContent: "center",
                 }}
               >
-                {isTyping ? <FaSpinner style={{ animation: "spin 1s linear infinite" }} /> : <FaPaperPlane />}
+                {isTyping ? (
+                  <FaSpinner style={{ animation: "spin 1s linear infinite" }} />
+                ) : (
+                  <FaPaperPlane />
+                )}
               </button>
             </div>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              marginTop: "12px",
-              fontSize: "10px",
-              color: "#a0aec0",
-            }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                marginTop: "12px",
+                fontSize: "10px",
+                color: "#a0aec0",
+              }}
+            >
               <FaCheckCircle style={{ fontSize: "10px", color: "#48bb78" }} />
               <span>Secure & Private</span>
             </div>
