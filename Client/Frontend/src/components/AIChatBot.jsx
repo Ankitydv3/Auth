@@ -15,7 +15,7 @@ import {
   FaMagic,
 } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
-
+import api from "../utils/axios";
 export default function AIChatBot() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -62,8 +62,8 @@ export default function AIChatBot() {
     setIsTyping(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/ai/analyze",
+      const response = await api.post(
+        `/ai/analyze`,
         {
           subject: message,
           description: message,

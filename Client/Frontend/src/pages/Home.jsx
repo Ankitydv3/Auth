@@ -22,6 +22,7 @@ import {
   FaCrown,
 } from "react-icons/fa";
 import { GiRunningShoe, GiFilmStrip } from "react-icons/gi";
+import api from "../utils/axios";
 
 const Home = () => {
   const [events, setEvents] = useState([]);
@@ -37,8 +38,8 @@ const Home = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/event?search=${search}&category=${category}`,
+      const response = await api.get(
+        `/event?search=${search}&category=${category}`,
       );
       setEvents(response.data.data || []);
     } catch (error) {

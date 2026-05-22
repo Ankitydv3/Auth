@@ -1,16 +1,9 @@
 import axios from "axios";
 
-const API="http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL;
 
-export const analyzeTicket=async(data)=>{
+export const analyzeTicket = async (data) => {
+  const response = await axios.post(`${API}/ai/analyze`, data);
 
-const response=await axios.post(
-
-`${API}/ai/analyze`,
-data
-
-);
-
-return response.data;
-
+  return response.data;
 };

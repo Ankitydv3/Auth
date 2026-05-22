@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "../utils/axios";
 import {
   FaRobot,
   FaBrain,
@@ -23,16 +24,15 @@ export default function AISupport() {
     if (!subject || !description) return;
 
     try {
-      setLoading(true);
-      const response = await axios.post(
-        "http://localhost:5000/api/ai/analyze",
-        {
-          subject,
-          description,
-        },
-      );
-      setResult(response.data.data);
-    } catch (error) {
+  setLoading(true);
+
+  const response = await api.post("/ai/analyze", {
+    subject,
+    description,
+  });
+
+  setResult(response.data.data);
+}catch (error) {
       console.log("AI FRONTEND ERROR:", error);
     } finally {
       setLoading(false);
