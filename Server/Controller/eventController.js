@@ -1,21 +1,80 @@
 const Event = require('../Models/Event');
 
 exports.getAllEvents = async (req, res) => {
-    try {
-        const filters = {};
-        if (req.query.category) {
-            filters.category = req.query.category;
-        }
-        if (req.query.ticketPrice) {
-            filters.ticketPrice = req.query.ticketPrice;
-        }
+  try {
 
+    const {
+      search,
+      category,
+      location,
+      minPrice,
+      maxPrice,
+      page = 1,
+      limit = 6,
+      sort = "date"
+    } = req.query;
 
-        const events = await Event.find(filters);
-        res.json(events);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching events' });
+    const filters = {};
+
+    // Search title
+    if (search) {
+      filters.title = {
+        $regex: search,
+        $options: "i"
+      };
     }
+
+    // Category filter
+    if (category) {
+      filters.category = category;
+    }
+
+    // Location filter
+    if (location) {
+      filters.location = {
+        $regex: location,
+        $options: "i"
+      };
+    }
+
+    // Price range
+    if (minPrice || maxPrice) {
+
+      filters.ticketPrice = {};
+
+      if (minPrice)
+        filters.ticketPrice.$gte = Number(minPrice);
+
+      if (maxPrice)
+        filters.ticketPrice.$lte = Number(maxPrice);
+    }
+
+    const skip = (page - 1) * limit;
+
+    const total = await Event.countDocuments(filters);
+
+    const events = await Event.find(filters)
+      .sort(sort)
+      .skip(skip)
+      .limit(Number(limit));
+
+    res.status(200).json({
+      success: true,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      data: events
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching events"
+    });
+  }
 };
 exports.getEventById = async (req, res) => {
     try {

@@ -6,16 +6,21 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import EventDetail from "./pages/EventDetail";
 import PaymentSuccess from "./pages/PaymentSucess";
+import AISupport from "./pages/AISupport";
+import AIChatBot from "./components/AIChatBot";
 import PaymentFailed from "./pages/PaymentFailed";
 import Navbar from "./components/Navbar";
+import About from "./pages/About";
 import "./index.css";
 
 function App() {
   return (
     <>
       <Navbar />
+      <AIChatBot />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
 
         <Route path="/login" element={<Login />} />
 

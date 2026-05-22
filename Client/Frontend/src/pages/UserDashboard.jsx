@@ -1,287 +1,103 @@
-import React, { useEffect, useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
-
-import api from "../utils/axios";
-import { AuthContext } from "../context/AuthContext";
-
+import React from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
-  FaCalendarAlt,
-  FaMapMarkerAlt,
-  FaMoneyBillWave,
-  FaTicketAlt,
-  FaClock,
   FaCheckCircle,
-  FaTimesCircle,
-  FaUserCircle,
+  FaTicketAlt,
+  FaArrowRight,
+  FaShare,
 } from "react-icons/fa";
 
-const UserDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Redirect if no user
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    }
-  }, [user, navigate]);
-
-  // FETCH BOOKINGS
-  useEffect(() => {
-    const fetchBookings = async () => {
-      if (!user) return;
-
-      try {
-        setLoading(true);
-        const { data } = await api.get("/booking/my");
-        // Ensure data is an array
-        setBookings(Array.isArray(data) ? data : []);
-        setError("");
-      } catch (err) {
-        console.error("Fetch error:", err);
-        if (err.response?.status === 401) {
-          setError("Session expired. Please login again.");
-          setTimeout(() => logout(), 2000);
-        } else if (err.response?.status === 404) {
-          setError("Bookings endpoint not found. Please check your API.");
-        } else {
-          setError(err.response?.data?.message || "Failed to load bookings");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [user, logout]);
-
-  // STATUS COLORS
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "confirmed":
-        return "bg-green-100 text-green-700";
-      case "pending":
-        return "bg-yellow-100 text-yellow-700";
-      case "cancelled":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  // If no user (while redirecting), show loading
-  if (!user && loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+const PaymentSuccess = () => {
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* HEADER */}
-      <div className="bg-gray-900 text-white shadow-xl">
-        <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-5xl">
-              <FaUserCircle />
+    <div className="min-h-screen bg-gradient-to-br from-white via-pink-50 to-white flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-md w-full"
+      >
+        <div className="bg-white rounded-3xl shadow-2xl p-10 text-center border border-pink-100">
+          {/* Animated Icon */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+            className="relative"
+          >
+            <div className="w-32 h-32 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <FaCheckCircle className="text-white text-6xl" />
             </div>
-            <div>
-              <h1 className="text-3xl font-extrabold">
-                Welcome, {user?.name || "User"}
-              </h1>
-              <p className="text-gray-300 mt-1">{user?.email}</p>
-            </div>
-          </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold"
+            >
+              ✓
+            </motion.div>
+          </motion.div>
 
-          <div className="flex gap-4">
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-4xl font-black text-gray-800 mb-3"
+          >
+            Booking Confirmed! 🎉
+          </motion.h1>
+
+          {/* Message */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-gray-600 mb-8 leading-relaxed"
+          >
+            Your ticket has been booked successfully.
+            <br />A confirmation email has been sent to your account.
+          </motion.p>
+
+          {/* Ticket Icon Animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-gradient-to-r from-pink-50 to-white rounded-2xl p-4 mb-8 border border-pink-100"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <FaTicketAlt className="text-pink-500 text-2xl animate-bounce" />
+              <span className="text-gray-700">E-ticket sent to your email</span>
+            </div>
+          </motion.div>
+
+          {/* Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-3"
+          >
+            <Link
+              to="/user/dashboard"
+              className="block w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold py-4 rounded-2xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              View My Tickets <FaArrowRight />
+            </Link>
             <Link
               to="/"
-              className="bg-white text-gray-900 px-5 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+              className="block w-full bg-gray-100 text-gray-700 font-semibold py-4 rounded-2xl hover:bg-gray-200 transition-all"
             >
-              Browse Events
+              Discover More Events
             </Link>
-            <button
-              onClick={() => logout()}
-              className="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl font-semibold transition"
-            >
-              Logout
+            <button className="w-full border border-pink-200 text-pink-600 font-semibold py-3 rounded-2xl hover:bg-pink-50 transition-all flex items-center justify-center gap-2">
+              <FaShare /> Share on Social Media
             </button>
-          </div>
+          </motion.div>
         </div>
-      </div>
-
-      {/* MAIN */}
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 font-medium">Total Bookings</p>
-                <h2 className="text-4xl font-extrabold mt-2">
-                  {bookings.length}
-                </h2>
-              </div>
-              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl">
-                <FaTicketAlt />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 font-medium">Confirmed</p>
-                <h2 className="text-4xl font-extrabold mt-2 text-green-600">
-                  {
-                    bookings.filter(
-                      (b) => b.status?.toLowerCase() === "confirmed",
-                    ).length
-                  }
-                </h2>
-              </div>
-              <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl">
-                <FaCheckCircle />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 font-medium">Pending</p>
-                <h2 className="text-4xl font-extrabold mt-2 text-yellow-500">
-                  {
-                    bookings.filter(
-                      (b) => b.status?.toLowerCase() === "pending",
-                    ).length
-                  }
-                </h2>
-              </div>
-              <div className="w-16 h-16 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-3xl">
-                <FaClock />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* BOOKINGS */}
-        <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-          <div className="p-6 border-b">
-            <h2 className="text-2xl font-bold text-gray-900">My Bookings</h2>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading bookings...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-20">
-              <FaTimesCircle className="text-6xl text-red-400 mx-auto mb-4" />
-              <p className="text-red-500 text-lg">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-black"
-              >
-                Try Again
-              </button>
-            </div>
-          ) : bookings.length === 0 ? (
-            <div className="text-center py-20">
-              <FaTimesCircle className="text-6xl text-gray-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-gray-700 mb-2">
-                No bookings yet
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Explore amazing events and reserve your seat.
-              </p>
-              <Link
-                to="/"
-                className="bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-black transition"
-              >
-                Browse Events
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
-              {bookings.map((booking) => (
-                <div
-                  key={booking._id}
-                  className="border rounded-2xl p-6 hover:shadow-xl transition"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900">
-                        {booking.eventId?.title || "Event Unavailable"}
-                      </h3>
-                      <p className="text-gray-500 mt-1 text-sm">
-                        Booking ID: {booking._id}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(
-                        booking.status,
-                      )}`}
-                    >
-                      {booking.status || "Unknown"}
-                    </span>
-                  </div>
-
-                  <div className="space-y-4 mt-6">
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <FaCalendarAlt className="text-purple-500" />
-                      <span>
-                        {booking.eventId?.date
-                          ? new Date(booking.eventId.date).toLocaleDateString()
-                          : "Date TBA"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <FaMapMarkerAlt className="text-red-500" />
-                      <span>{booking.eventId?.location || "Location TBA"}</span>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <FaMoneyBillWave className="text-green-500" />
-                      <span>
-                        Payment:{" "}
-                        <strong>{booking.paymentStatus || "N/A"}</strong>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex items-center justify-between">
-                    <span className="text-sm text-gray-400">
-                      Booked on{" "}
-                      {booking.createdAt
-                        ? new Date(booking.createdAt).toLocaleDateString()
-                        : "Unknown date"}
-                    </span>
-                    <Link
-                      to={`/event/${booking.eventId?._id}`}
-                      className="bg-gray-900 text-white px-5 py-2 rounded-xl font-semibold hover:bg-black transition"
-                    >
-                      View Event
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
 
-export default UserDashboard;
+export default PaymentSuccess;

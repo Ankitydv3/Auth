@@ -15,7 +15,11 @@ const bookingSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'confirmed', 'cancelled'],
         default: 'pending'
-    },
+    },assignedTo:{
+type:mongoose.Schema.Types.ObjectId,
+ref:"User",
+default:null
+},
    paymentStatus: {
     type: String,
     enum: [
