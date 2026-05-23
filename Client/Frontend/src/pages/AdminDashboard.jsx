@@ -25,8 +25,8 @@ import {
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
-  const [events, setEvents] = useState([]);
-  const [bookings, setBookings] = useState([]);
+  const [event, setevent] = useState([]);
+  const [booking, setbooking] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -63,84 +63,84 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Fetch events with error handling
-      let eventsData = [];
+      // Fetch event with error handling
+      let eventData = [];
       try {
-        const eventRes = await api.get("/events"); // Try /events first (plural)
-        console.log("Events API Response (full):", eventRes.data);
-        console.log("Events API Response type:", typeof eventRes.data);
+        const eventRes = await api.get("/event"); // Try /event first (plural)
+        console.log("event API Response (full):", eventRes.data);
+        console.log("event API Response type:", typeof eventRes.data);
         console.log("Is array:", Array.isArray(eventRes.data));
 
         // Handle different response structures
         if (Array.isArray(eventRes.data)) {
-          eventsData = eventRes.data;
+          eventData = eventRes.data;
         } else if (
-          eventRes.data?.events &&
-          Array.isArray(eventRes.data.events)
+          eventRes.data?.event &&
+          Array.isArray(eventRes.data.event)
         ) {
-          eventsData = eventRes.data.events;
+          eventData = eventRes.data.event;
         } else if (eventRes.data?.data && Array.isArray(eventRes.data.data)) {
-          eventsData = eventRes.data.data;
+          eventData = eventRes.data.data;
         } else if (eventRes.data && typeof eventRes.data === "object") {
           // If it's a single object, wrap in array
-          eventsData = [eventRes.data];
+          eventData = [eventRes.data];
         }
       } catch (eventErr) {
-        console.error("Events fetch error:", eventErr);
+        console.error("event fetch error:", eventErr);
         // Try alternate endpoint /event (singular)
         try {
           const eventRes2 = await api.get("/event");
           if (Array.isArray(eventRes2.data)) {
-            eventsData = eventRes2.data;
-          } else if (eventRes2.data?.events) {
-            eventsData = eventRes2.data.events;
+            eventData = eventRes2.data;
+          } else if (eventRes2.data?.event) {
+            eventData = eventRes2.data.event;
           } else if (eventRes2.data?.data) {
-            eventsData = eventRes2.data.data;
+            eventData = eventRes2.data.data;
           }
         } catch (eventErr2) {
           console.error("Both event endpoints failed:", eventErr2);
         }
       }
 
-      console.log("Processed events data:", eventsData);
-      setEvents(eventsData);
+      console.log("Processed event data:", eventData);
+      setevent(eventData);
 
-      // Fetch bookings
-      let bookingsData = [];
+      // Fetch booking
+      let bookingData = [];
       try {
-        const bookingRes = await api.get("/bookings"); // Try /bookings first (plural)
-        console.log("Bookings API Response:", bookingRes.data);
+        const bookingRes = await api.get("/booking"); // Try /booking first (plural)
+        console.log("booking API Response:", bookingRes.data);
 
         if (Array.isArray(bookingRes.data)) {
-          bookingsData = bookingRes.data;
+          bookingData = bookingRes.data;
         } else if (
-          bookingRes.data?.bookings &&
-          Array.isArray(bookingRes.data.bookings)
+          bookingRes.data?.booking &&
+          Array.isArray(bookingRes.data.booking)
         ) {
-          bookingsData = bookingRes.data.bookings;
+          bookingData = bookingRes.data.booking;
         } else if (
           bookingRes.data?.data &&
           Array.isArray(bookingRes.data.data)
         ) {
-          bookingsData = bookingRes.data.data;
+          bookingData = bookingRes.data.data;
         }
       } catch (bookingErr) {
-        console.error("Bookings fetch error:", bookingErr);
+        console.error("booking fetch error:", bookingErr);
         // Try alternate endpoint /booking (singular)
         try {
           const bookingRes2 = await api.get("/booking");
           if (Array.isArray(bookingRes2.data)) {
-            bookingsData = bookingRes2.data;
-          } else if (bookingRes2.data?.bookings) {
-            bookingsData = bookingRes2.data.bookings;
+            bookingData = bookingRes2.data;
+          } else if (bookingRes2.data?.booking) {
+            bookingData = bookingRes2.data.booking;
           }
         } catch (bookingErr2) {
           console.error("Both booking endpoints failed:", bookingErr2);
         }
       }
 
-      console.log("Processed bookings data:", bookingsData);
-      setBookings(bookingsData);
+      console.log("Processed booking data:", bookingData);
+      setbooking(bookingData);
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       console.error("Error response:", err.response);
@@ -182,8 +182,8 @@ const AdminDashboard = () => {
 
       console.log("Creating event:", eventData);
 
-      const { data } = await api.post("/events", eventData);
-      setEvents([data, ...events]);
+      const { data } = await api.post("/event", eventData);
+      setevent([data, ...event]);
       setSuccess("Event created successfully");
 
       // Reset form
@@ -207,8 +207,8 @@ const AdminDashboard = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     try {
-      await api.delete(`/events/${id}`);
-      setEvents(events.filter((e) => e._id !== id));
+      await api.delete(`/event/${id}`);
+      setevent(event.filter((e) => e._id !== id));
       setSuccess("Event deleted successfully");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
@@ -220,7 +220,7 @@ const AdminDashboard = () => {
   const confirmBooking = async (id) => {
     if (!window.confirm("Confirm this booking?")) return;
     try {
-      const { data } = await api.put(`/bookings/${id}/confirm`, {
+      const { data } = await api.put(`/booking/${id}/confirm`, {
         status: "confirmed",
         paymentStatus: "completed",
       });
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
   const cancelBooking = async (id) => {
     if (!window.confirm("Cancel this booking?")) return;
     try {
-      await api.put(`/bookings/${id}/cancel`, {
+      await api.put(`/booking/${id}/cancel`, {
         status: "cancelled",
       });
       setSuccess("Booking cancelled successfully");
@@ -248,22 +248,22 @@ const AdminDashboard = () => {
     }
   };
 
-  const filteredBookings = bookings.filter((booking) => {
+  const filteredbooking = booking.filter((booking) => {
     if (bookingFilter === "all") return true;
     return booking.status?.toLowerCase() === bookingFilter;
   });
 
-  const totalRevenue = bookings.reduce(
+  const totalRevenue = booking.reduce(
     (acc, booking) => acc + (booking.amount || booking.totalAmount || 0),
     0,
   );
-  const confirmedBookings = bookings.filter(
+  const confirmedbooking = booking.filter(
     (b) => b.status?.toLowerCase() === "confirmed",
   ).length;
-  const pendingBookings = bookings.filter(
+  const pendingbooking = booking.filter(
     (b) => b.status?.toLowerCase() === "pending",
   ).length;
-  const cancelledBookings = bookings.filter(
+  const cancelledbooking = booking.filter(
     (b) => b.status?.toLowerCase() === "cancelled",
   ).length;
 
@@ -304,20 +304,20 @@ const AdminDashboard = () => {
       trend: "+12.5%",
     },
     {
-      title: "Confirmed Bookings",
-      value: confirmedBookings,
+      title: "Confirmed booking",
+      value: confirmedbooking,
       icon: <FaCheckCircle />,
       trend: "+8.2%",
     },
     {
       title: "Pending Approvals",
-      value: pendingBookings,
+      value: pendingbooking,
       icon: <FaClock />,
       trend: "-3.1%",
     },
     {
-      title: "Total Events",
-      value: events.length,
+      title: "Total event",
+      value: event.length,
       icon: <FaTicketAlt />,
       trend: "+5 new",
     },
@@ -336,7 +336,7 @@ const AdminDashboard = () => {
             Loading Dashboard...
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            Fetching events and bookings
+            Fetching event and booking
           </p>
         </div>
       </div>
@@ -364,7 +364,7 @@ const AdminDashboard = () => {
                     Admin Dashboard
                   </h1>
                   <p className="text-pink-100 text-lg mt-1">
-                    Manage events, bookings, and analytics
+                    Manage event, booking, and analytics
                   </p>
                 </div>
               </div>
@@ -552,7 +552,7 @@ const AdminDashboard = () => {
 
       {/* Main Grid */}
       <div className="grid lg:grid-cols-2 gap-8 p-4 md:p-8">
-        {/* Events Section */}
+        {/* event Section */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -563,7 +563,7 @@ const AdminDashboard = () => {
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <FaTicketAlt className="text-pink-500" />
-                  All Events ({events.length})
+                  All event ({event.length})
                 </h2>
                 <p className="text-gray-500 text-sm mt-1">
                   Manage your event listings
@@ -572,16 +572,16 @@ const AdminDashboard = () => {
               <div className="flex items-center gap-2 text-sm text-pink-600">
                 <FaChartLine />
                 <span>
-                  {events.filter((e) => new Date(e.date) > new Date()).length}{" "}
+                  {event.filter((e) => new Date(e.date) > new Date()).length}{" "}
                   Upcoming
                 </span>
               </div>
             </div>
           </div>
           <div className="max-h-[600px] overflow-y-auto p-6 space-y-4 custom-scroll">
-            {events.length === 0 ? (
+            {event.length === 0 ? (
               <div className="text-center py-10">
-                <div className="text-gray-400 mb-2">No events created yet.</div>
+                <div className="text-gray-400 mb-2">No event created yet.</div>
                 <button
                   onClick={() => setShowCreateForm(true)}
                   className="text-pink-500 hover:text-pink-600 font-semibold"
@@ -590,7 +590,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
             ) : (
-              events.map((event, idx) => (
+              event.map((event, idx) => (
                 <motion.div
                   key={event._id || idx}
                   initial={{ opacity: 0, y: 20 }}
@@ -649,7 +649,7 @@ const AdminDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Bookings Section */}
+        {/* booking Section */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -663,7 +663,7 @@ const AdminDashboard = () => {
                   Booking Requests
                 </h2>
                 <p className="text-gray-500 text-sm mt-1">
-                  Manage and confirm bookings
+                  Manage and confirm booking
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -673,25 +673,25 @@ const AdminDashboard = () => {
                   onChange={(e) => setBookingFilter(e.target.value)}
                   className="border border-pink-200 rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-pink-400"
                 >
-                  <option value="all">All ({bookings.length})</option>
-                  <option value="pending">Pending ({pendingBookings})</option>
+                  <option value="all">All ({booking.length})</option>
+                  <option value="pending">Pending ({pendingbooking})</option>
                   <option value="confirmed">
-                    Confirmed ({confirmedBookings})
+                    Confirmed ({confirmedbooking})
                   </option>
                   <option value="cancelled">
-                    Cancelled ({cancelledBookings})
+                    Cancelled ({cancelledbooking})
                   </option>
                 </select>
               </div>
             </div>
           </div>
           <div className="max-h-[600px] overflow-y-auto p-6 space-y-4 custom-scroll">
-            {filteredBookings.length === 0 ? (
+            {filteredbooking.length === 0 ? (
               <div className="text-center py-10 text-gray-400">
                 No booking requests found.
               </div>
             ) : (
-              filteredBookings.map((booking, idx) => {
+              filteredbooking.map((booking, idx) => {
                 const statusBadge = getStatusBadge(booking.status);
                 return (
                   <motion.div
