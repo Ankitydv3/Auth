@@ -3,7 +3,12 @@ const { Resend } = require("resend");
 require("dotenv").config();
 
 const resendApiKey = process.env.RESEND_API_KEY?.trim() || "";
+const emailUser = process.env.EMAIL_USER?.trim() || "";
+const emailPass = process.env.EMAIL_PASS?.trim() || "";
+const emailFrom = process.env.EMAIL_FROM?.trim() || "";
+
 const useResend = Boolean(resendApiKey);
+const useSmtp = Boolean(emailUser && emailPass);
 
 let resendClient = null;
 if (useResend) {
@@ -11,14 +16,14 @@ if (useResend) {
 }
 
 let transporter = null;
-if (!useResend && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+if (useSmtp) {
   transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: emailUser,
+      pass: emailPass,
     },
     connectionTimeout: 30000,
     greetingTimeout: 30000,
@@ -32,39 +37,60 @@ if (!useResend && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       console.log("SMTP ready (Gmail)");
     }
   });
-} else if (useResend) {
-  console.log("Email: using Resend API");
+}
+
+if (useResend) {
+  console.log("Email: Resend API enabled");
+} else if (useSmtp) {
+  console.log("Email: Gmail SMTP enabled");
 } else {
   console.warn(
-    "Email not configured. Set RESEND_API_KEY (production) or EMAIL_USER + EMAIL_PASS (local).",
+    "Email not configured. Set RESEND_API_KEY and/or EMAIL_USER + EMAIL_PASS.",
   );
 }
 
+const isResendSandboxFrom = (from) =>
+  !from || from.includes("onboarding@resend.dev");
+
 const getFromAddress = () => {
-  if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
-  if (useResend) return "Eventora <onboarding@resend.dev>";
-  return `"Eventora" <${process.env.EMAIL_USER}>`;
+  if (emailFrom) return emailFrom;
+  if (useResend && !useSmtp) return "Eventora <onboarding@resend.dev>";
+  if (emailUser) return `"Eventora" <${emailUser}>`;
+  return "Eventora <onboarding@resend.dev>";
 };
 
-const sendEmail = async ({ to, subject, html }) => {
-  if (useResend) {
-    const { data, error } = await resendClient.emails.send({
-      from: getFromAddress(),
-      to,
-      subject,
-      html,
-    });
+const formatMailError = (error) => {
+  const message = error?.message || String(error);
+  if (message.includes("only send testing emails to your own email")) {
+    return (
+      "Email could not be sent: Resend test mode only allows your own inbox. " +
+      "Verify a domain at resend.com/domains and set EMAIL_FROM, or add EMAIL_USER + EMAIL_PASS for Gmail."
+    );
+  }
+  return message;
+};
 
-    if (error) {
-      throw new Error(error.message || JSON.stringify(error));
-    }
+const sendViaResend = async ({ to, subject, html }) => {
+  const { data, error } = await resendClient.emails.send({
+    from: getFromAddress(),
+    to,
+    subject,
+    html,
+  });
 
-    return data;
+  if (error) {
+    const err = new Error(error.message || JSON.stringify(error));
+    err.provider = "resend";
+    throw err;
   }
 
+  return data;
+};
+
+const sendViaSmtp = async ({ to, subject, html }) => {
   if (!transporter) {
     throw new Error(
-      "Email not configured. Add RESEND_API_KEY on your host (Render), or EMAIL_USER and EMAIL_PASS for local Gmail.",
+      "Gmail SMTP not configured. Set EMAIL_USER and EMAIL_PASS in your server environment.",
     );
   }
 
@@ -74,6 +100,37 @@ const sendEmail = async ({ to, subject, html }) => {
     subject,
     html,
   });
+};
+
+const sendEmail = async ({ to, subject, html }) => {
+  const payload = { to, subject, html };
+  const from = getFromAddress();
+
+  // Resend sandbox cannot deliver to arbitrary addresses — use Gmail when available
+  if (useResend && useSmtp && isResendSandboxFrom(from)) {
+    return sendViaSmtp(payload);
+  }
+
+  if (useResend) {
+    try {
+      return await sendViaResend(payload);
+    } catch (error) {
+      console.error("Resend failed:", error.message);
+      if (useSmtp) {
+        console.log("Falling back to Gmail SMTP...");
+        return sendViaSmtp(payload);
+      }
+      throw new Error(formatMailError(error));
+    }
+  }
+
+  if (useSmtp) {
+    return sendViaSmtp(payload);
+  }
+
+  throw new Error(
+    "Email not configured. Add RESEND_API_KEY (with verified domain) or EMAIL_USER + EMAIL_PASS on your host.",
+  );
 };
 
 const OTP_SUBJECTS = {

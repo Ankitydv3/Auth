@@ -28,7 +28,9 @@ exports.sendBookingOTP = async (req, res) => {
     res.json({ message: "OTP sent to email" });
   } catch (error) {
     console.error("Send OTP error:", error);
-    res.status(500).json({ message: "Error sending OTP" });
+    res.status(500).json({
+      message: error.message || "Error sending OTP",
+    });
   }
 };
 

@@ -40,7 +40,11 @@ exports.registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error registering user" });
+    const message =
+      error.message?.includes("Email") || error.message?.includes("Resend")
+        ? error.message
+        : "Error registering user";
+    res.status(500).json({ message });
   }
 };
 exports.login = async (req, res) => {
@@ -79,6 +83,29 @@ exports.login = async (req, res) => {
     }
 
     if (!user.isVerified) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      await OTP.deleteMany({
+        email: user.email,
+        action: "account_verification",
+      });
+      await OTP.create({
+        email: user.email,
+        otp,
+        action: "account_verification",
+      });
+
+      try {
+        await sendOtpEmail(user.email, otp, "account_verification");
+      } catch (emailError) {
+        console.error("Login OTP email failed:", emailError);
+        return res.status(500).json({
+          message:
+            emailError.message ||
+            "Could not send verification email. Try again later.",
+        });
+      }
+
       return res.status(200).json({
         needsVerification: true,
         email: user.email,
