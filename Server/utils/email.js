@@ -9,41 +9,32 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.verify((err) => {
-  if (err) {
-    console.log("❌ Email config error:", err.message);
-  } else {
-    console.log("✅ Email server ready");
-  }
-});
-
-exports.sendOtpEmail = async (
-  email,
-  otp,
-  type = "account_verification"
-) => {
+exports.sendOtpEmail = async (email, otp) => {
   try {
     const info = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject:
-        type === "account_verification"
-          ? "Account Verification OTP"
-          : "Event Booking OTP",
+      subject: "Event Booking OTP",
 
       html: `
-        <div style="font-family:Arial;padding:20px">
-          <h2>Eventora OTP Verification</h2>
-          <h1>${otp}</h1>
-          <p>This OTP is valid for 5 minutes.</p>
-        </div>
+        <h2>Your Booking OTP</h2>
+        <h1>${otp}</h1>
+        <p>OTP valid for 5 minutes.</p>
       `,
     });
 
-    console.log("✅ OTP sent:", info.messageId);
+    console.log("OTP sent:", info.messageId);
 
   } catch (error) {
-    console.log("❌ MAIL ERROR:", error.message);
+    console.log("EMAIL ERROR:", error);
     throw error;
   }
 };
+
+transporter.verify((err) => {
+  if (err) {
+    console.log("Email error:", err);
+  } else {
+    console.log("Email server ready");
+  }
+});
