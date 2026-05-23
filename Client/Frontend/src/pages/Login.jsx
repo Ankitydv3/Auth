@@ -24,11 +24,24 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
     setError("");
+
     try {
       if (!showOTP) {
         const data = await login(email, password);
+
+        // OTP required
+        if (data?.verify) {
+          setShowOTP(true);
+
+          setError("OTP sent to your email. Please enter it below.");
+
+          return;
+        }
+
+        // Normal login
         if (data.role === "admin") {
           navigate("/admin/dashboard");
         } else {
@@ -36,17 +49,11 @@ const Login = () => {
         }
       } else {
         await verifyOtp(email, otp);
+
         navigate("/user/dashboard");
       }
     } catch (err) {
-      if (err.needsVerification) {
-        setShowOTP(true);
-        setError(
-          "Account needs verification. Please enter the OTP sent to your email.",
-        );
-      } else {
-        setError(err.message || "Login failed");
-      }
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }

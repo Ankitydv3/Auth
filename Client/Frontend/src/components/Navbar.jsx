@@ -699,7 +699,7 @@ const Navbar = () => {
                           to={
                             user.role === "admin"
                               ? "/admin/dashboard"
-                              : "/dashboard"
+                              : "/user/dashboard"
                           }
                           className="dropdown-item"
                           onClick={() => setUserMenuOpen(false)}
@@ -776,7 +776,9 @@ const Navbar = () => {
                 <>
                   <Link
                     to={
-                      user.role === "admin" ? "/admin/dashboard" : "/dashboard"
+                      user.role === "admin"
+                        ? "/admin/dashboard"
+                        : "/user/dashboard"
                     }
                     className="mobile-link"
                   >
