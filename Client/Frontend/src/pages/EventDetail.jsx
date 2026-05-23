@@ -53,8 +53,12 @@ const EventDetail = () => {
     setSuccessMsg("");
     try {
       if (!showOTP) {
-        await api.post("/booking/send-otp");
+        await api.post("/booking/send-otp", {
+          eventId: event._id,
+        });
+
         setShowOTP(true);
+
         setSuccessMsg(
           "OTP sent to your email. Please verify to confirm booking.",
         );
@@ -65,7 +69,10 @@ const EventDetail = () => {
         setEvent({ ...event, availableSeats: event.availableSeats - 1 });
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Booking failed");
+      console.log("BOOKING ERROR:", err.response?.data);
+      console.log("FULL ERROR:", err);
+
+      setError(err.response?.data?.message || err.message || "Booking failed");
     } finally {
       setBookingLoading(false);
     }
