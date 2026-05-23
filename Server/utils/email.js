@@ -7,8 +7,14 @@ const emailUser = process.env.EMAIL_USER?.trim() || "";
 const emailPass = process.env.EMAIL_PASS?.trim() || "";
 const emailFrom = process.env.EMAIL_FROM?.trim() || "";
 
+// Render/Railway/Heroku block outbound SMTP — use Resend HTTP API only
+const isHosted =
+  process.env.RENDER === "true" ||
+  Boolean(process.env.RAILWAY_ENVIRONMENT) ||
+  Boolean(process.env.DYNO);
+
 const useResend = Boolean(resendApiKey);
-const useSmtp = Boolean(emailUser && emailPass);
+const useSmtp = !isHosted && Boolean(emailUser && emailPass);
 
 let resendClient = null;
 if (useResend) {
@@ -25,9 +31,9 @@ if (useSmtp) {
       user: emailUser,
       pass: emailPass,
     },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
   });
 
   transporter.verify((err) => {
@@ -39,7 +45,13 @@ if (useSmtp) {
   });
 }
 
-if (useResend) {
+if (isHosted) {
+  console.log(
+    useResend
+      ? "Email: Resend API (hosted — SMTP disabled)"
+      : "Email: NOT CONFIGURED — set RESEND_API_KEY on Render",
+  );
+} else if (useResend) {
   console.log("Email: Resend API enabled");
 } else if (useSmtp) {
   console.log("Email: Gmail SMTP enabled");
@@ -52,36 +64,75 @@ if (useResend) {
 const isResendSandboxFrom = (from) =>
   !from || from.includes("onboarding@resend.dev");
 
+const isInvalidResendFrom = (from) =>
+  from.includes("@gmail.com") ||
+  from.includes("@googlemail.com") ||
+  from.includes("@yahoo.") ||
+  from.includes("@hotmail.");
+
 const getFromAddress = () => {
-  if (emailFrom) return emailFrom;
-  if (useResend && !useSmtp) return "Eventora <onboarding@resend.dev>";
-  if (emailUser) return `"Eventora" <${emailUser}>`;
+  if (emailFrom) {
+    if (useResend && isInvalidResendFrom(emailFrom)) {
+      if (isHosted) {
+        return "Eventora <onboarding@resend.dev>";
+      }
+      if (useSmtp) {
+        return `"Eventora" <${emailUser}>`;
+      }
+    }
+    return emailFrom;
+  }
+
+  if (useResend && !useSmtp) {
+    return "Eventora <onboarding@resend.dev>";
+  }
+  if (emailUser) {
+    return `"Eventora" <${emailUser}>`;
+  }
   return "Eventora <onboarding@resend.dev>";
 };
 
 const formatMailError = (error) => {
   const message = error?.message || String(error);
+
   if (message.includes("only send testing emails to your own email")) {
     return (
-      "Email could not be sent: Resend test mode only allows your own inbox. " +
-      "Verify a domain at resend.com/domains and set EMAIL_FROM, or add EMAIL_USER + EMAIL_PASS for Gmail."
+      "OTP email failed: Resend test mode only delivers to your own inbox. " +
+      "Verify a domain at https://resend.com/domains and set EMAIL_FROM to e.g. Eventora <noreply@yourdomain.com> in Render."
     );
   }
+
+  if (
+    message.includes("domain is not verified") ||
+    message.includes("not verified")
+  ) {
+    return (
+      "OTP email failed: sender domain not verified in Resend. " +
+      "Add your domain at https://resend.com/domains and set EMAIL_FROM in Render to an address on that domain."
+    );
+  }
+
   return message;
 };
 
 const sendViaResend = async ({ to, subject, html }) => {
+  const from = getFromAddress();
+
+  if (isHosted && isResendSandboxFrom(from)) {
+    console.warn(
+      "Resend sandbox sender: OTP only works for your Resend account email until EMAIL_FROM uses a verified domain.",
+    );
+  }
+
   const { data, error } = await resendClient.emails.send({
-    from: getFromAddress(),
+    from,
     to,
     subject,
     html,
   });
 
   if (error) {
-    const err = new Error(error.message || JSON.stringify(error));
-    err.provider = "resend";
-    throw err;
+    throw new Error(error.message || JSON.stringify(error));
   }
 
   return data;
@@ -90,7 +141,7 @@ const sendViaResend = async ({ to, subject, html }) => {
 const sendViaSmtp = async ({ to, subject, html }) => {
   if (!transporter) {
     throw new Error(
-      "Gmail SMTP not configured. Set EMAIL_USER and EMAIL_PASS in your server environment.",
+      "Gmail SMTP not configured. Set EMAIL_USER and EMAIL_PASS (local dev only).",
     );
   }
 
@@ -104,10 +155,18 @@ const sendViaSmtp = async ({ to, subject, html }) => {
 
 const sendEmail = async ({ to, subject, html }) => {
   const payload = { to, subject, html };
-  const from = getFromAddress();
 
-  // Resend sandbox cannot deliver to arbitrary addresses — use Gmail when available
-  if (useResend && useSmtp && isResendSandboxFrom(from)) {
+  if (isHosted) {
+    if (!useResend) {
+      throw new Error(
+        "Email not configured on Render. Add RESEND_API_KEY and a verified EMAIL_FROM in your Render environment settings.",
+      );
+    }
+    return sendViaResend(payload);
+  }
+
+  // Local: prefer Gmail when Resend is still on sandbox sender
+  if (useResend && useSmtp && isResendSandboxFrom(getFromAddress())) {
     return sendViaSmtp(payload);
   }
 
@@ -117,7 +176,7 @@ const sendEmail = async ({ to, subject, html }) => {
     } catch (error) {
       console.error("Resend failed:", error.message);
       if (useSmtp) {
-        console.log("Falling back to Gmail SMTP...");
+        console.log("Falling back to Gmail SMTP (local only)...");
         return sendViaSmtp(payload);
       }
       throw new Error(formatMailError(error));
@@ -129,7 +188,7 @@ const sendEmail = async ({ to, subject, html }) => {
   }
 
   throw new Error(
-    "Email not configured. Add RESEND_API_KEY (with verified domain) or EMAIL_USER + EMAIL_PASS on your host.",
+    "Email not configured. Set RESEND_API_KEY or EMAIL_USER + EMAIL_PASS.",
   );
 };
 
@@ -151,7 +210,7 @@ exports.sendOtpEmail = async (email, otp, action = "event_booking") => {
     console.log("OTP sent:", result?.id || result?.messageId);
   } catch (error) {
     console.error("MAIL ERROR:", error.message || error);
-    throw error;
+    throw new Error(formatMailError(error));
   }
 };
 
@@ -169,6 +228,6 @@ exports.sendBookingEmail = async (email, bookingId, eventTitle, status) => {
     console.log("Booking email sent:", result?.id || result?.messageId);
   } catch (error) {
     console.error("BOOKING MAIL ERROR:", error.message || error);
-    throw error;
+    throw new Error(formatMailError(error));
   }
 };
