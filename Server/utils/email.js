@@ -2,19 +2,16 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-transporter.verify((err, success) => {
+transporter.verify((err) => {
   if (err) {
-    console.log("❌ Email config error:", err);
+    console.log("❌ Email config error:", err.message);
   } else {
     console.log("✅ Email server ready");
   }
@@ -26,8 +23,8 @@ exports.sendOtpEmail = async (
   type = "account_verification"
 ) => {
   try {
-    await transporter.sendMail({
-      from: `"Eventora" <${process.env.EMAIL_USER}>`,
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
       to: email,
       subject:
         type === "account_verification"
@@ -35,15 +32,18 @@ exports.sendOtpEmail = async (
           : "Event Booking OTP",
 
       html: `
-      <h2>Your OTP: ${otp}</h2>
-      <p>Valid for 5 minutes</p>
-      `
+        <div style="font-family:Arial;padding:20px">
+          <h2>Eventora OTP Verification</h2>
+          <h1>${otp}</h1>
+          <p>This OTP is valid for 5 minutes.</p>
+        </div>
+      `,
     });
 
-    console.log("OTP sent:", email);
+    console.log("✅ OTP sent:", info.messageId);
 
-  } catch(error) {
-    console.log("MAIL ERROR:", error);
+  } catch (error) {
+    console.log("❌ MAIL ERROR:", error.message);
     throw error;
   }
 };
