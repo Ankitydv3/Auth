@@ -2,11 +2,12 @@ const nodemailer = require("nodemailer");
 const { Resend } = require("resend");
 require("dotenv").config();
 
-const useResend = Boolean(process.env.RESEND_API_KEY?.trim());
+const resendApiKey = process.env.RESEND_API_KEY?.trim() || "";
+const useResend = Boolean(resendApiKey);
 
 let resendClient = null;
 if (useResend) {
-  resendClient = new Resend(process.env.RESEND_API_KEY);
+  resendClient = new Resend(resendApiKey);
 }
 
 let transporter = null;
