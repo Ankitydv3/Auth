@@ -75,6 +75,8 @@ Deployment
 - Frontend can be deployed on Netlify/Vercel
 - Backend can be deployed on Render/Heroku
 - Ensure environment variables are set for production
+- OTP email on Render: set RESEND_API_KEY (https://resend.com) — Gmail SMTP does not work on most cloud hosts
+- Optional: EMAIL_FROM with a domain you verified in Resend
 
 ---
 
