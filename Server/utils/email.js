@@ -3,16 +3,18 @@ const { Resend } = require("resend");
 require("dotenv").config();
 
 const resendApiKey = process.env.RESEND_API_KEY?.trim() || "";
+const brevoApiKey = process.env.BREVO_API_KEY?.trim() || "";
 const emailUser = process.env.EMAIL_USER?.trim() || "";
 const emailPass = process.env.EMAIL_PASS?.trim() || "";
 const emailFrom = process.env.EMAIL_FROM?.trim() || "";
 
-// Render/Railway/Heroku block outbound SMTP — use Resend HTTP API only
+// Render/Railway/Heroku block outbound SMTP
 const isHosted =
   process.env.RENDER === "true" ||
   Boolean(process.env.RAILWAY_ENVIRONMENT) ||
   Boolean(process.env.DYNO);
 
+const useBrevo = Boolean(brevoApiKey);
 const useResend = Boolean(resendApiKey);
 const useSmtp = !isHosted && Boolean(emailUser && emailPass);
 
@@ -27,39 +29,31 @@ if (useSmtp) {
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    auth: {
-      user: emailUser,
-      pass: emailPass,
-    },
+    auth: { user: emailUser, pass: emailPass },
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 15000,
   });
 
   transporter.verify((err) => {
-    if (err) {
-      console.log("SMTP verify failed:", err.message);
-    } else {
-      console.log("SMTP ready (Gmail)");
-    }
+    if (err) console.log("SMTP verify failed:", err.message);
+    else console.log("SMTP ready (Gmail)");
   });
 }
 
-if (isHosted) {
-  console.log(
-    useResend
-      ? "Email: Resend API (hosted — SMTP disabled)"
-      : "Email: NOT CONFIGURED — set RESEND_API_KEY on Render",
-  );
-} else if (useResend) {
-  console.log("Email: Resend API enabled");
-} else if (useSmtp) {
-  console.log("Email: Gmail SMTP enabled");
-} else {
-  console.warn(
-    "Email not configured. Set RESEND_API_KEY and/or EMAIL_USER + EMAIL_PASS.",
-  );
-}
+const logEmailMode = () => {
+  if (isHosted) {
+    if (useBrevo) console.log("Email: Brevo API (hosted)");
+    else if (useResend) console.log("Email: Resend API (hosted)");
+    else console.log("Email: NOT CONFIGURED — set BREVO_API_KEY or RESEND_API_KEY on Render");
+    return;
+  }
+  if (useBrevo) console.log("Email: Brevo API enabled");
+  else if (useResend) console.log("Email: Resend API enabled");
+  else if (useSmtp) console.log("Email: Gmail SMTP enabled");
+  else console.warn("Email not configured.");
+};
+logEmailMode();
 
 const isResendSandboxFrom = (from) =>
   !from || from.includes("onboarding@resend.dev");
@@ -72,24 +66,34 @@ const isInvalidResendFrom = (from) =>
 
 const getFromAddress = () => {
   if (emailFrom) {
-    if (useResend && isInvalidResendFrom(emailFrom)) {
-      if (isHosted) {
-        return "Eventora <onboarding@resend.dev>";
-      }
-      if (useSmtp) {
-        return `"Eventora" <${emailUser}>`;
-      }
+    if (useResend && !useBrevo && isInvalidResendFrom(emailFrom)) {
+      if (isHosted) return "Eventora <onboarding@resend.dev>";
+      if (useSmtp) return `"Eventora" <${emailUser}>`;
     }
     return emailFrom;
   }
-
-  if (useResend && !useSmtp) {
+  if (useResend && !useBrevo && !useSmtp) {
     return "Eventora <onboarding@resend.dev>";
   }
-  if (emailUser) {
-    return `"Eventora" <${emailUser}>`;
-  }
+  if (emailUser) return `"Eventora" <${emailUser}>`;
   return "Eventora <onboarding@resend.dev>";
+};
+
+const getBrevoSender = () => {
+  const from = getFromAddress();
+  const match = from.match(/^(.+?)\s*<([^>]+)>$/);
+  if (match) {
+    return { name: match[1].trim().replace(/^"|"$/g, ""), email: match[2].trim() };
+  }
+  if (from.includes("@")) {
+    return { name: "Eventora", email: from };
+  }
+  if (emailUser) {
+    return { name: "Eventora", email: emailUser };
+  }
+  throw new Error(
+    "Set EMAIL_USER (your verified Brevo sender email) or EMAIL_FROM on Render.",
+  );
 };
 
 const formatMailError = (error) => {
@@ -98,7 +102,8 @@ const formatMailError = (error) => {
   if (message.includes("only send testing emails to your own email")) {
     return (
       "OTP email failed: Resend test mode only delivers to your own inbox. " +
-      "Verify a domain at https://resend.com/domains and set EMAIL_FROM to e.g. Eventora <noreply@yourdomain.com> in Render."
+      "Fix: add BREVO_API_KEY on Render (free at brevo.com, verify your Gmail as sender) " +
+      "OR verify a domain at resend.com/domains and set EMAIL_FROM."
     );
   }
 
@@ -107,20 +112,50 @@ const formatMailError = (error) => {
     message.includes("not verified")
   ) {
     return (
-      "OTP email failed: sender domain not verified in Resend. " +
-      "Add your domain at https://resend.com/domains and set EMAIL_FROM in Render to an address on that domain."
+      "OTP email failed: sender not verified. " +
+      "For Brevo: verify EMAIL_USER at brevo.com → Senders. " +
+      "For Resend: verify your domain and set EMAIL_FROM."
     );
   }
 
   return message;
 };
 
+const sendViaBrevo = async ({ to, subject, html }) => {
+  const sender = getBrevoSender();
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": brevoApiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender,
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+
+  const body = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      body.message || body.error || `Brevo API error (${response.status})`,
+    );
+  }
+
+  return body;
+};
+
 const sendViaResend = async ({ to, subject, html }) => {
   const from = getFromAddress();
 
   if (isHosted && isResendSandboxFrom(from)) {
-    console.warn(
-      "Resend sandbox sender: OTP only works for your Resend account email until EMAIL_FROM uses a verified domain.",
+    throw new Error(
+      "Resend test sender cannot email users. Add BREVO_API_KEY on Render or verify a domain on Resend.",
     );
   }
 
@@ -140,9 +175,7 @@ const sendViaResend = async ({ to, subject, html }) => {
 
 const sendViaSmtp = async ({ to, subject, html }) => {
   if (!transporter) {
-    throw new Error(
-      "Gmail SMTP not configured. Set EMAIL_USER and EMAIL_PASS (local dev only).",
-    );
+    throw new Error("Gmail SMTP not configured (local dev only).");
   }
 
   return transporter.sendMail({
@@ -157,15 +190,15 @@ const sendEmail = async ({ to, subject, html }) => {
   const payload = { to, subject, html };
 
   if (isHosted) {
-    if (!useResend) {
-      throw new Error(
-        "Email not configured on Render. Add RESEND_API_KEY and a verified EMAIL_FROM in your Render environment settings.",
-      );
-    }
-    return sendViaResend(payload);
+    if (useBrevo) return sendViaBrevo(payload);
+    if (useResend) return sendViaResend(payload);
+    throw new Error(
+      "Email not configured on Render. Add BREVO_API_KEY (recommended) or RESEND_API_KEY with a verified domain.",
+    );
   }
 
-  // Local: prefer Gmail when Resend is still on sandbox sender
+  if (useBrevo) return sendViaBrevo(payload);
+
   if (useResend && useSmtp && isResendSandboxFrom(getFromAddress())) {
     return sendViaSmtp(payload);
   }
@@ -176,19 +209,18 @@ const sendEmail = async ({ to, subject, html }) => {
     } catch (error) {
       console.error("Resend failed:", error.message);
       if (useSmtp) {
-        console.log("Falling back to Gmail SMTP (local only)...");
+        console.log("Falling back to Gmail SMTP...");
         return sendViaSmtp(payload);
       }
+      if (useBrevo) return sendViaBrevo(payload);
       throw new Error(formatMailError(error));
     }
   }
 
-  if (useSmtp) {
-    return sendViaSmtp(payload);
-  }
+  if (useSmtp) return sendViaSmtp(payload);
 
   throw new Error(
-    "Email not configured. Set RESEND_API_KEY or EMAIL_USER + EMAIL_PASS.",
+    "Email not configured. Set BREVO_API_KEY, RESEND_API_KEY, or EMAIL_USER + EMAIL_PASS.",
   );
 };
 
@@ -207,7 +239,7 @@ exports.sendOtpEmail = async (email, otp, action = "event_booking") => {
 
   try {
     const result = await sendEmail({ to: email, subject, html });
-    console.log("OTP sent:", result?.id || result?.messageId);
+    console.log("OTP sent:", result?.id || result?.messageId || "ok");
   } catch (error) {
     console.error("MAIL ERROR:", error.message || error);
     throw new Error(formatMailError(error));
@@ -225,7 +257,7 @@ exports.sendBookingEmail = async (email, bookingId, eventTitle, status) => {
 
   try {
     const result = await sendEmail({ to: email, subject, html });
-    console.log("Booking email sent:", result?.id || result?.messageId);
+    console.log("Booking email sent:", result?.id || result?.messageId || "ok");
   } catch (error) {
     console.error("BOOKING MAIL ERROR:", error.message || error);
     throw new Error(formatMailError(error));
