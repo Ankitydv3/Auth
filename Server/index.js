@@ -28,7 +28,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://ankit-eventora-frontend.netlify.app",
+      "https://auth-frontend-kstl.onrender.com",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
